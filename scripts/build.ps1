@@ -6,7 +6,13 @@ $source = Join-Path $root 'upstream'
 $build = Join-Path $root 'build'
 $dist = Join-Path $root 'dist'
 $main = Join-Path $source 'src/gui/main_gui.cpp'
+Copy-Item (Join-Path $root 'ui/strings_panel.h') (Join-Path $source 'src/gui/strings_panel.h') -Force
 $text = [IO.File]::ReadAllText($main)
+if (!$text.Contains('#include "strings_panel.h"')) {
+    $text = $text.Replace('#include "guimainwindow.h"', '#include "guimainwindow.h"' + "`n" + '#include "strings_panel.h"')
+    $text = $text.Replace('        mainWindow.show();', '        auto *traceAction = mainWindow.menuBar()->addAction("StringsTrace");' + "`n" + '        QObject::connect(traceAction, &QAction::triggered, &mainWindow, [&mainWindow] { openStringsPanel(&mainWindow); });' + "`n" + '        mainWindow.show();')
+    [IO.File]::WriteAllText($main, $text)
+}
 $anchor = '        mainWindow.show();'
 if (!$text.Contains('StringsTrace theme')) {
     if (!$text.Contains($anchor)) { throw 'Upstream GUI entry point changed.' }
