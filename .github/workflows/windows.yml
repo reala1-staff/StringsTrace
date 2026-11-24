@@ -1,0 +1,26 @@
+name: Windows build
+on:
+  workflow_dispatch:
+  push:
+    branches: [development]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          modules: 'qtshadertools qt5compat'
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build.ps1 -QtPath "$env:QT_ROOT_DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StringsTrace-development
+          path: dist/
+          if-no-files-found: error
